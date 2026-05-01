@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Check-in | ゲストチェックイン 入住</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#f7f6f3;min-height:100vh;color:#1a1a18}
+
+  /* ===== GUEST PAGE ===== */
+  #guest-page{display:flex;flex-direction:column;min-height:100vh}
+  .guest-header{background:#1D9E75;padding:20px 24px;color:#fff}
+  .guest-header h1{font-size:20px;font-weight:500}
+  .guest-header p{font-size:13px;opacity:0.8;margin-top:2px}
+  .guest-body{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;max-width:480px;margin:0 auto;width:100%}
+
+  .field-label{font-size:13px;color:#5F5E5A;margin-bottom:7px;font-weight:500}
+  .field-input{width:100%;padding:13px 14px;border:1px solid #d3d1c7;border-radius:10px;font-size:16px;color:#1a1a18;background:#fff;outline:none;-webkit-appearance:none}
+  .field-input:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.15)}
+
+  .photo-box{border:2px dashed #d3d1c7;border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;background:#fafaf8;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+  .photo-box:active{background:#E1F5EE;border-color:#1D9E75}
+  .photo-box.filled{border-style:solid;border-color:#1D9E75;padding:8px;background:#fff}
+  .photo-box img{width:100%;border-radius:8px;max-height:240px;object-fit:cover;display:block}
+  .photo-icon{width:52px;height:52px;background:#E1F5EE;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+  .photo-icon svg{width:24px;height:24px;stroke:#0F6E56;fill:none;stroke-width:2}
+  .photo-main-text{font-size:15px;color:#1a1a18;font-weight:500;margin-bottom:4px}
+  .photo-sub-text{font-size:12px;color:#888780}
+
+  .submit-btn{width:100%;padding:16px;background:#1D9E75;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:500;cursor:pointer;transition:background 0.15s;-webkit-tap-highlight-color:transparent;margin-top:auto}
+  .submit-btn:active{background:#0F6E56;transform:scale(0.98)}
+  .submit-btn:disabled{background:#D3D1C7;color:#888780;cursor:not-allowed;transform:none}
+
+  /* success */
+  #success-page{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;text-align:center;gap:16px}
+  .success-circle{width:80px;height:80px;background:#E1F5EE;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .success-circle svg{width:40px;height:40px;stroke:#0F6E56;fill:none;stroke-width:2.5}
+  .success-title{font-size:22px;font-weight:500;color:#1a1a18}
+  .success-sub{font-size:14px;color:#888780;line-height:1.7}
+
+  /* ===== ADMIN PAGE ===== */
+  #admin-page{display:none;min-height:100vh;background:#f7f6f3}
+  .admin-topbar{background:#0F6E56;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10}
+  .admin-topbar h1{color:#fff;font-size:17px;font-weight:500}
+  .admin-topbar-right{display:flex;align-items:center;gap:10px}
+  .admin-badge{background:rgba(255,255,255,0.2);color:#fff;font-size:12px;padding:4px 10px;border-radius:20px}
+  .admin-clear-btn{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+  .admin-body{padding:16px;max-width:720px;margin:0 auto}
+  .admin-empty{text-align:center;padding:80px 20px;color:#b4b2a9;font-size:14px}
+
+  .record-card{background:#fff;border-radius:12px;border:0.5px solid #e8e7e0;padding:16px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
+  .record-thumb{width:72px;height:52px;background:#f1efe8;border-radius:8px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;color:#b4b2a9}
+  .record-thumb img{width:100%;height:100%;object-fit:cover}
+  .record-info{flex:1;min-width:0}
+  .record-name{font-size:16px;font-weight:500;color:#1a1a18}
+  .record-time{font-size:12px;color:#b4b2a9;margin-top:3px}
+  .record-delete{background:none;border:none;color:#b4b2a9;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
+  .record-delete:hover{color:#E24B4A}
+
+  /* switch button */
+  .switch-btn{background:rgba(255,255,255,0.15);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+  input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<!-- GUEST PAGE -->
+<div id="guest-page">
+  <div class="guest-header">
+    <h1>チェックイン / Check-in</h1>
+    <p>please register your name, passport photo page.</p>
+  </div>
+  <div class="guest-body">
+    <div>
+      <div class="field-label">お名前 / Full name</div>
+      <input class="field-input" id="g-name" type="text" placeholder="例: John Smith" oninput="checkReady()" autocomplete="name">
+    </div>
+    <div>
+      <div class="field-label">パスポートの写真 / Passport photo/ 护照</div>
+      <div class="photo-box" id="photo-box" onclick="document.getElementById('photo-input').click()">
+        <div id="photo-placeholder">
+          <div class="photo-icon">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div class="photo-main-text">タップして撮影 / Tap to take photo</div>
+          <div class="photo-sub-text">パスポートの顔写真ページを撮影してください</div>
+        </div>
+        <img id="photo-preview">
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+    </div>
+    <button class="submit-btn" id="submit-btn" disabled onclick="submitGuest()">送信する / Submit</button>
+  </div>
+</div>
+
+<!-- SUCCESS PAGE -->
+<div id="success-page">
+  <div class="success-circle">
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="success-title">登録完了！Welcome!</div>
+  <div class="success-sub">チェックインが完了しました。<br>ごゆっくりお過ごしください。<br><br>Your check-in is complete.<br>Have a wonderful stay!</div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="admin-page">
+  <div class="admin-topbar">
+    <h1>受付記録</h1>
+    <div class="admin-topbar-right">
+      <span class="admin-badge" id="admin-count-badge">0件</span>
+      <button class="admin-clear-btn" onclick="clearAll()">全削除</button>
+      <button class="switch-btn" onclick="showGuest()">← ゲスト画面</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div id="admin-list"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'gh_checkin_records';
+
+let photoData = null;
+
+// ---- Routing ----
+function getHash(){ return location.hash }
+
+function showGuest(){
+  document.getElementById('guest-page').style.display = 'flex';
+  document.getElementById('admin-page').style.display = 'none';
+  document.getElementById('success-page').style.display = 'none';
+  location.hash = '';
+}
+
+function showAdmin(){
+  document.getElementById('guest-page').style.display = 'none';
+  document.getElementById('admin-page').style.display = 'block';
+  document.getElementById('success-page').style.display = 'none';
+  location.hash = 'admin';
+  renderAdmin();
+}
+
+window.addEventListener('hashchange', () => {
+  if(location.hash === '#admin') showAdmin();
+  else showGuest();
+});
+
+if(location.hash === '#admin') showAdmin();
+
+// ---- Guest ----
+function handlePhoto(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    photoData = ev.target.result;
+    document.getElementById('photo-placeholder').style.display = 'none';
+    const img = document.getElementById('photo-preview');
+    img.src = photoData;
+    img.style.display = 'block';
+    document.getElementById('photo-box').classList.add('filled');
+    checkReady();
+  };
+  reader.readAsDataURL(f);
+}
+
+function checkReady(){
+  const name = document.getElementById('g-name').value.trim();
+  document.getElementById('submit-btn').disabled = !(name && photoData);
+}
+
+function submitGuest(){
+  const name = document.getElementById('g-name').value.trim();
+  const now = new Date().toLocaleString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const records = loadRecords();
+  records.unshift({ id: Date.now(), name, photo: photoData, time: now });
+  saveRecords(records);
+  document.getElementById('guest-page').style.display = 'none';
+  document.getElementById('success-page').style.display = 'flex';
+}
+
+// ---- Storage ----
+function loadRecords(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveRecords(r){ localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
+
+// ---- Admin ----
+function renderAdmin(){
+  const records = loadRecords();
+  document.getElementById('admin-count-badge').textContent = records.length + '件';
+  const list = document.getElementById('admin-list');
+  if(!records.length){
+    list.innerHTML = '<div class="admin-empty">まだチェックインの記録がありません。</div>';
+    return;
+  }
+  list.innerHTML = records.map(r => `
+    <div class="record-card" id="rec-${r.id}">
+      <div class="record-thumb">
+        ${r.photo ? `<img src="${r.photo}" alt="passport">` : '写真なし'}
+      </div>
+      <div class="record-info">
+        <div class="record-name">${escHtml(r.name)}</div>
+        <div class="record-time">${r.time}</div>
+      </div>
+      <button class="record-delete" onclick="deleteRecord(${r.id})" title="削除">✕</button>
+    </div>
+  `).join('');
+}
+
+function deleteRecord(id){
+  if(!confirm('この記録を削除しますか？')) return;
+  saveRecords(loadRecords().filter(r => r.id !== id));
+  renderAdmin();
+}
+
+function clearAll(){
+  if(!confirm('すべての記録を削除します。よろしいですか？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  renderAdmin();
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Admin画面へのリンクをフッターに追加（オーナー用）
+const footer = document.createElement('div');
+footer.style.cssText = 'position:fixed;bottom:0;right:0;padding:6px 10px;font-size:11px;color:#d3d1c7;cursor:pointer;user-select:none';
+footer.textContent = '●';
+footer.onclick = showAdmin;
+document.getElementById('guest-page').appendChild(footer);
+</script>
+</body>
+</html>
